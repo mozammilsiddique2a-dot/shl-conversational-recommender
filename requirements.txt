@@ -1,0 +1,9 @@
+beautifulsoup4==4.12.3
+fastapi==0.115.6
+httpx==0.28.1
+pydantic==2.10.4
+pytest==8.3.4
+py==1.11.0
+requests==2.32.3
+scikit-learn==1.5.2
+uvicorn[standard]==0.34.0

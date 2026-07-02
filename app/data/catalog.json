@@ -1,0 +1,98 @@
+[
+  {
+    "id": "verify-gplus",
+    "name": "Verify G+ General Ability",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A cognitive ability assessment measuring numerical, deductive, and inductive reasoning for graduate and professional roles.",
+    "assessment_types": ["Cognitive Ability"],
+    "duration_minutes": 36,
+    "remote_testing": true,
+    "adaptive": true,
+    "job_families": ["Graduate", "Professional", "Analyst"],
+    "skills": ["numerical reasoning", "deductive reasoning", "inductive reasoning", "problem solving"]
+  },
+  {
+    "id": "occupational-personality",
+    "name": "Occupational Personality Questionnaire OPQ",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A workplace personality questionnaire for understanding behavioral preferences, leadership style, and culture fit.",
+    "assessment_types": ["Personality"],
+    "duration_minutes": 25,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Leadership", "Management", "Professional"],
+    "skills": ["leadership", "collaboration", "resilience", "communication"]
+  },
+  {
+    "id": "java-coding",
+    "name": "Java Programming Assessment",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A technical coding test for Java developers covering object-oriented programming, algorithms, and debugging.",
+    "assessment_types": ["Knowledge and Skills", "Technical"],
+    "duration_minutes": 45,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Technology", "Software Engineering"],
+    "skills": ["java", "oop", "algorithms", "debugging", "software development"]
+  },
+  {
+    "id": "python-coding",
+    "name": "Python Programming Assessment",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A coding assessment for Python roles with practical exercises in data structures, functions, and problem solving.",
+    "assessment_types": ["Knowledge and Skills", "Technical"],
+    "duration_minutes": 40,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Technology", "Data", "Software Engineering"],
+    "skills": ["python", "data structures", "algorithms", "automation", "software development"]
+  },
+  {
+    "id": "sales-sfta",
+    "name": "Sales Foundation Assessment",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A sales assessment measuring customer focus, influence, resilience, and commercial judgement for sales hiring.",
+    "assessment_types": ["Behavioral", "Situational Judgement"],
+    "duration_minutes": 30,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Sales", "Customer Success"],
+    "skills": ["customer focus", "influence", "negotiation", "resilience"]
+  },
+  {
+    "id": "contact-center",
+    "name": "Contact Center Simulation",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A simulation for customer service and contact center roles assessing multitasking, service orientation, and problem resolution.",
+    "assessment_types": ["Simulation", "Situational Judgement"],
+    "duration_minutes": 35,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Customer Service", "Operations"],
+    "skills": ["service orientation", "multitasking", "communication", "problem resolution"]
+  },
+  {
+    "id": "leadership-sjt",
+    "name": "Leadership Situational Judgement Test",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A judgement-based assessment for people managers covering coaching, decision making, conflict handling, and prioritization.",
+    "assessment_types": ["Situational Judgement", "Behavioral"],
+    "duration_minutes": 32,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Leadership", "Management"],
+    "skills": ["coaching", "decision making", "conflict management", "prioritization"]
+  },
+  {
+    "id": "data-analyst",
+    "name": "Data Analyst Assessment",
+    "url": "https://www.shl.com/solutions/products/product-catalog/",
+    "description": "A practical assessment for data analyst roles measuring SQL, data interpretation, charts, and business insight.",
+    "assessment_types": ["Knowledge and Skills", "Technical"],
+    "duration_minutes": 50,
+    "remote_testing": true,
+    "adaptive": false,
+    "job_families": ["Data", "Analytics"],
+    "skills": ["sql", "data analysis", "data interpretation", "visualization", "business insight"]
+  }
+]

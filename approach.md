@@ -15,7 +15,7 @@ The API is stateless. Each `/chat` call uses the full message history supplied b
 
 ## Catalog Scraping
 
-The scraper in `scripts/scrape_catalog.py` targets SHL's public product catalog page and writes normalized records to `app/data/catalog.json`. It collects `name`, `url`, `test_type`, `description`, and `category` when available. It uses polite headers, request timeouts, duplicate removal, absolute URL handling, detail-page enrichment when possible, and fallback logging. If scraping fails or times out, it does not overwrite the existing catalog unless explicitly requested.
+The scraper in `scripts/scrape_catalog.py` targets SHL's public product catalog and writes normalized records to `app/data/catalog.json`. It collects `name`, `url`, `test_type`, `description`, and `category` when available. It uses polite headers, request timeouts, duplicate removal, absolute URL handling, detail-page enrichment when possible, and fallback logging. If scraping fails or times out, it does not overwrite the existing catalog unless explicitly requested.
 
 ## Retrieval Approach
 
@@ -37,12 +37,16 @@ The guardrail layer blocks prompt injection, hidden-prompt requests, legal advic
 
 ## Evaluation and Testing
 
-Tests use pytest and FastAPI TestClient. They cover `/health`, strict `/chat` schema, vague queries, Java developer recommendations, off-topic refusals, prompt-injection refusals, comparison behavior, refinement behavior, guardrails, and TF-IDF retrieval filters. The final local run passed 14 tests.
+Tests use pytest and FastAPI TestClient. They cover `/health`, strict `/chat` schema, vague and empty queries, Java developer recommendations, catalog URL provenance, off-topic refusals, prompt-injection refusals, comparison behavior, additive refinement behavior, guardrails, and TF-IDF retrieval filters. The final local run passed 20 tests.
+
+## Deployment
+
+The project includes a `Dockerfile` and `render.yaml` for Render deployment. Render can deploy the app as a Docker web service with `/health` as the health check endpoint. The public API exposes only `GET /health` and `POST /chat`.
 
 ## What Did Not Work
 
-The live SHL catalog request timed out in the local environment during testing, so the scraper preserved the existing catalog instead of writing an empty file. Also, the machine's global Python installation contains a broken `py.py` file that interferes with plain `pytest`; running tests through the virtual environment with site-packages prioritized worked.
+The original SHL catalog URL redirected to SHL's current product pages, so the scraper was adjusted to collect product-specific assessment URLs from the current site structure. Also, the local machine's global Python installation contains a broken `py.py` file that interferes with plain `pytest`; running tests through the virtual environment with site-packages prioritized worked.
 
 ## AI Tools Used
 
-Codex was used to scaffold and refine the FastAPI app, scraper, retrieval logic, guardrails, tests, README, Dockerfile, Render config, and this approach document. The implementation remains deterministic and does not depend on any paid LLM API at runtime.
+Codex was used to scaffold and refine the FastAPI app, scraper, retrieval logic, guardrails, tests, README, Dockerfile, Render config, and this approach document. AI-generated code was reviewed, understood, tested, and refined before deployment. The implementation remains deterministic and does not depend on any paid LLM API at runtime.

@@ -28,7 +28,7 @@ Request:
 ```json
 {
   "messages": [
-    {"role": "user", "content": "Recommend a Python developer assessment under 45 minutes"}
+    {"role": "user", "content": "I am hiring a Java developer with 4 years experience."}
   ]
 }
 ```
@@ -37,12 +37,17 @@ Response:
 
 ```json
 {
-  "reply": "I found 1 catalog matches. The strongest options are Python Programming Assessment.",
+  "reply": "I found 2 SHL catalog matches. The strongest options are Coding Simulations, Technical Skills.",
   "recommendations": [
     {
-      "name": "Python Programming Assessment",
-      "url": "https://www.shl.com/solutions/products/product-catalog/",
-      "test_type": "Knowledge and Skills, Technical"
+      "name": "Coding Simulations",
+      "url": "https://www.shl.com/products/assessments/skills-and-simulations/coding-simulations/",
+      "test_type": "Knowledge and Skills"
+    },
+    {
+      "name": "Technical Skills",
+      "url": "https://www.shl.com/products/assessments/skills-and-simulations/technical-skills/",
+      "test_type": "Knowledge and Skills"
     }
   ],
   "end_of_conversation": true

@@ -112,8 +112,8 @@ docker run -p 8000:8000 shl-assessment-recommender
 
 ## Submission
 
-Public API URL: https://your-app-name.onrender.com
+Public API URL: https://shl-conversational-recommender-jnu1.onrender.com
 
-Health URL: https://your-app-name.onrender.com/health
+Health URL: https://shl-conversational-recommender-jnu1.onrender.com/health
 
-Chat URL: https://your-app-name.onrender.com/chat
+Chat URL: https://shl-conversational-recommender-jnu1.onrender.com/chat

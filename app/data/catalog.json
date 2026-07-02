@@ -1,98 +1,86 @@
 [
   {
-    "id": "verify-gplus",
-    "name": "Verify G+ General Ability",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A cognitive ability assessment measuring numerical, deductive, and inductive reasoning for graduate and professional roles.",
-    "assessment_types": ["Cognitive Ability"],
-    "duration_minutes": 36,
-    "remote_testing": true,
-    "adaptive": true,
-    "job_families": ["Graduate", "Professional", "Analyst"],
-    "skills": ["numerical reasoning", "deductive reasoning", "inductive reasoning", "problem solving"]
+    "name": "Occupational Personality Questionnaire (OPQ)",
+    "url": "https://www.shl.com/products/assessments/personality-assessment/shl-occupational-personality-questionnaire-opq/",
+    "test_type": "Personality",
+    "description": "Our occupational personality questionnaire helps you to get accurate, bias-free assessments by matching individual working preferences to business requirements.",
+    "category": null
   },
   {
-    "id": "occupational-personality",
-    "name": "Occupational Personality Questionnaire OPQ",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A workplace personality questionnaire for understanding behavioral preferences, leadership style, and culture fit.",
-    "assessment_types": ["Personality"],
-    "duration_minutes": 25,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Leadership", "Management", "Professional"],
-    "skills": ["leadership", "collaboration", "resilience", "communication"]
+    "name": "Global Skills Assessment (GSA)",
+    "url": "https://www.shl.com/products/assessments/behavioral-assessments/global-skills-assessment-gsa/",
+    "test_type": "Behavioral, Situational Judgement",
+    "description": "SHL's Global Skills Assessment measures 96 behavioral skills in 15 minutes. Objective data for onboarding, upskilling, reskilling, and workforce planning.",
+    "category": null
   },
   {
-    "id": "java-coding",
-    "name": "Java Programming Assessment",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A technical coding test for Java developers covering object-oriented programming, algorithms, and debugging.",
-    "assessment_types": ["Knowledge and Skills", "Technical"],
-    "duration_minutes": 45,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Technology", "Software Engineering"],
-    "skills": ["java", "oop", "algorithms", "debugging", "software development"]
+    "name": "Job-Focused Assessments (JFA)",
+    "url": "https://www.shl.com/products/assessments/job-focused-assessments/",
+    "test_type": "Assessment",
+    "description": "Measure the skills needed to succeed in any role with pre-packaged skills assessments. Fast and accurate measurement of job-relevant skills.",
+    "category": null
   },
   {
-    "id": "python-coding",
-    "name": "Python Programming Assessment",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A coding assessment for Python roles with practical exercises in data structures, functions, and problem solving.",
-    "assessment_types": ["Knowledge and Skills", "Technical"],
-    "duration_minutes": 40,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Technology", "Data", "Software Engineering"],
-    "skills": ["python", "data structures", "algorithms", "automation", "software development"]
+    "name": "Motivational Questionnaire (MQ)",
+    "url": "https://www.shl.com/products/assessments/personality-assessment/shl-motivation-questionnaire-mq/",
+    "test_type": "Personality",
+    "description": "Build an engaged, high-performing workforce using our motivation questionnaire (MQ) by matching individual employee motivation to team and organizational goals.",
+    "category": null
   },
   {
-    "id": "sales-sfta",
-    "name": "Sales Foundation Assessment",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A sales assessment measuring customer focus, influence, resilience, and commercial judgement for sales hiring.",
-    "assessment_types": ["Behavioral", "Situational Judgement"],
-    "duration_minutes": 30,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Sales", "Customer Success"],
-    "skills": ["customer focus", "influence", "negotiation", "resilience"]
+    "name": "Situational Judgment Tests (SJT)",
+    "url": "https://www.shl.com/products/assessments/behavioral-assessments/situation-judgement-tests-sjt/",
+    "test_type": "Behavioral, Situational Judgement",
+    "description": "Using our Situational Judgment Tests (SJT), you can measure candidates' behavioral fit to a given role by assessing their response to a specific work situation.",
+    "category": null
   },
   {
-    "id": "contact-center",
-    "name": "Contact Center Simulation",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A simulation for customer service and contact center roles assessing multitasking, service orientation, and problem resolution.",
-    "assessment_types": ["Simulation", "Situational Judgement"],
-    "duration_minutes": 35,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Customer Service", "Operations"],
-    "skills": ["service orientation", "multitasking", "communication", "problem resolution"]
+    "name": "SHL Verify",
+    "url": "https://www.shl.com/products/assessments/cognitive-assessments/",
+    "test_type": "Cognitive Ability",
+    "description": "Measure candidates' potential and ability to learn, adapt, and succeed in any role with SHL's cognitive ability tests and assessments.",
+    "category": null
   },
   {
-    "id": "leadership-sjt",
-    "name": "Leadership Situational Judgement Test",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A judgement-based assessment for people managers covering coaching, decision making, conflict handling, and prioritization.",
-    "assessment_types": ["Situational Judgement", "Behavioral"],
-    "duration_minutes": 32,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Leadership", "Management"],
-    "skills": ["coaching", "decision making", "conflict management", "prioritization"]
+    "name": "Call Center Simulations",
+    "url": "https://www.shl.com/products/assessments/skills-and-simulations/call-center-simulations/",
+    "test_type": "Knowledge and Skills",
+    "description": "SHL’s Call Center Simulations and assessment tool helps you to identify agents with the critical competencies and personality in a real-life call center environment.",
+    "category": null
   },
   {
-    "id": "data-analyst",
-    "name": "Data Analyst Assessment",
-    "url": "https://www.shl.com/solutions/products/product-catalog/",
-    "description": "A practical assessment for data analyst roles measuring SQL, data interpretation, charts, and business insight.",
-    "assessment_types": ["Knowledge and Skills", "Technical"],
-    "duration_minutes": 50,
-    "remote_testing": true,
-    "adaptive": false,
-    "job_families": ["Data", "Analytics"],
-    "skills": ["sql", "data analysis", "data interpretation", "visualization", "business insight"]
+    "name": "Business Skills",
+    "url": "https://www.shl.com/products/assessments/skills-and-simulations/business-skills/",
+    "test_type": "Knowledge and Skills",
+    "description": "With our computer literacy test, assess candidates' Microsoft Office proficiency, such as working with graphs and charts, creating presentations, and more.",
+    "category": null
+  },
+  {
+    "name": "Coding Simulations",
+    "url": "https://www.shl.com/products/assessments/skills-and-simulations/coding-simulations/",
+    "test_type": "Knowledge and Skills",
+    "description": "Shortlist 45% more candidates within half the usual hiring time with our coding skills assessment for full stack, data engineering, front-end and more roles.",
+    "category": null
+  },
+  {
+    "name": "Technical Skills",
+    "url": "https://www.shl.com/products/assessments/skills-and-simulations/technical-skills/",
+    "test_type": "Knowledge and Skills",
+    "description": "SHL Technical Skills assessment helps you to measure knowledge of 180+ technology concepts in less than 15 minutes for Full Stack, Front-end, Data Science, DevOps, and more roles.",
+    "category": null
+  },
+  {
+    "name": "Language Evaluation",
+    "url": "https://www.shl.com/products/assessments/skills-and-simulations/language-evaluation/",
+    "test_type": "Knowledge and Skills",
+    "description": "SHL’s AI-powered suite of communication and language proficiency tests automates language assessment, helping you to faster find and hire the right people.",
+    "category": null
+  },
+  {
+    "name": "Outsourced Assessments (VADC)",
+    "url": "https://www.shl.com/products/assessments/assessment-and-development-centers/",
+    "test_type": "Assessment",
+    "description": "Our end-to-end virtual assessment and development centers provide the most efficient and accurate way of identifying potential from anywhere in the world.",
+    "category": null
   }
 ]

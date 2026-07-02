@@ -27,6 +27,14 @@ HEADERS = {
 
 
 logger = logging.getLogger("scrape_catalog")
+GENERIC_LINK_TEXT = {
+    "",
+    "learn more",
+    "read guide",
+    "read paper",
+    "view all shl products",
+    "view all shl solutions",
+}
 
 
 @dataclass(frozen=True)
@@ -73,13 +81,72 @@ def fetch_html(session: Session, url: str, timeout: int) -> str | None:
 def heading_before(node: Tag) -> str | None:
     for previous in node.find_all_previous(["h1", "h2", "h3", "h4"], limit=4):
         text = clean_text(previous.get_text(" ", strip=True))
-        if text:
+        if text and text.lower() != "outdated browser detected":
             return text
     return None
 
 
 def absolute_url(href: str, base_url: str) -> str:
     return urljoin(base_url, href)
+
+
+def is_generic_catalog_url(url: str, base_url: str) -> bool:
+    normalized = url.rstrip("/").lower()
+    generic = base_url.rstrip("/").lower()
+    return normalized == generic or normalized in {
+        "https://www.shl.com/products",
+        "https://www.shl.com/products/assessments",
+        "https://www.shl.com/solutions/products/product-catalog",
+    }
+
+
+def candidate_urls(node: Tag, base_url: str) -> list[str]:
+    urls: list[str] = []
+    for attr in ("data-url", "data-href", "data-link", "href"):
+        value = node.get(attr)
+        if isinstance(value, str) and value.strip():
+            urls.append(absolute_url(value.strip(), base_url))
+    for child in node.select("[data-url], [data-href], [data-link], a[href]"):
+        for attr in ("data-url", "data-href", "data-link", "href"):
+            value = child.get(attr)
+            if isinstance(value, str) and value.strip():
+                urls.append(absolute_url(value.strip(), base_url))
+    return urls
+
+
+def product_url_for_node(node: Tag, base_url: str) -> str:
+    urls = candidate_urls(node, base_url)
+    if not urls:
+        return base_url
+
+    productish = [
+        url
+        for url in urls
+        if "shl.com" in url.lower()
+        and not is_generic_catalog_url(url, base_url)
+        and not url.endswith("#")
+    ]
+    if productish:
+        return productish[0]
+
+    non_generic = [url for url in urls if not is_generic_catalog_url(url, base_url)]
+    if non_generic:
+        return non_generic[0]
+    return urls[0]
+
+
+def is_product_specific_url(url: str, base_url: str) -> bool:
+    lowered = url.lower().rstrip("/")
+    if is_generic_catalog_url(url, base_url):
+        return False
+    return (
+        "shl.com/products/assessments/" in lowered
+        and lowered not in {
+            "https://www.shl.com/products/assessments/behavioral-assessments",
+            "https://www.shl.com/products/assessments/personality-assessment",
+            "https://www.shl.com/products/assessments/skills-and-simulations",
+        }
+    )
 
 
 def looks_like_individual_solution(text: str) -> bool:
@@ -141,8 +208,10 @@ def parse_table(table: Tag, base_url: str) -> Iterable[CatalogItem]:
             continue
 
         name = clean_text(link.get_text(" ", strip=True)) or values[0]
-        href = link.get("href", "")
-        url = absolute_url(href, base_url)
+        url = product_url_for_node(row, base_url)
+        if not is_product_specific_url(url, base_url):
+            logger.info("Skipping %s because no product-specific URL was found", name)
+            continue
         row_text = " ".join(values)
 
         if category and not looks_like_individual_solution(category + " " + row_text):
@@ -199,13 +268,51 @@ def parse_cards(soup: BeautifulSoup, base_url: str) -> Iterable[CatalogItem]:
             if not description:
                 description = f"SHL Individual Test Solution: {name}."
 
+            url = product_url_for_node(card, base_url)
+            if not is_product_specific_url(url, base_url):
+                logger.info("Skipping %s because no product-specific URL was found", name)
+                continue
+
             yield CatalogItem(
                 name=name,
-                url=absolute_url(link.get("href", ""), base_url),
+                url=url,
                 test_type=test_type,
                 description=description,
                 category=category,
             )
+
+
+def parse_current_products_page(soup: BeautifulSoup, base_url: str) -> Iterable[CatalogItem]:
+    for link in soup.select("a[href]"):
+        name = clean_text(link.get_text(" ", strip=True))
+        url = absolute_url(link.get("href", ""), base_url)
+        if name.lower() in GENERIC_LINK_TEXT or not is_product_specific_url(url, base_url):
+            continue
+
+        container = link.find_parent(["article", "section", "div", "li"]) or link
+        description = clean_text(container.get_text(" ", strip=True)).replace(name, "", 1).strip(" -|")
+        if not description:
+            description = f"SHL assessment product page: {name}."
+
+        path = url.lower()
+        if "personality" in path:
+            test_type = "Personality"
+        elif "cognitive" in path:
+            test_type = "Cognitive Ability"
+        elif "skills-and-simulations" in path:
+            test_type = "Knowledge and Skills"
+        elif "behavioral" in path or "judgement" in path or "judgment" in path:
+            test_type = "Behavioral, Situational Judgement"
+        else:
+            test_type = "Assessment"
+
+        yield CatalogItem(
+            name=name,
+            url=url,
+            test_type=test_type,
+            description=description,
+            category=heading_before(link),
+        )
 
 
 def parse_catalog(html: str, base_url: str) -> list[CatalogItem]:
@@ -218,6 +325,9 @@ def parse_catalog(html: str, base_url: str) -> list[CatalogItem]:
     if not items:
         logger.info("No catalog table entries found; falling back to card/list parsing")
         items.extend(parse_cards(soup, base_url))
+    if not items:
+        logger.info("No Individual Test Solutions section found; falling back to current SHL products page parsing")
+        items.extend(parse_current_products_page(soup, base_url))
 
     return dedupe(items)
 
@@ -225,7 +335,10 @@ def parse_catalog(html: str, base_url: str) -> list[CatalogItem]:
 def enrich_descriptions(items: list[CatalogItem], session: Session, timeout: int) -> list[CatalogItem]:
     enriched: list[CatalogItem] = []
     for item in items:
-        if item.description and not item.description.startswith("SHL Individual Test Solution:"):
+        if item.description and not (
+            item.description.startswith("SHL Individual Test Solution:")
+            or item.description.startswith("SHL assessment product page:")
+        ):
             enriched.append(item)
             continue
         description = detail_description(session, item.url, timeout)
@@ -247,9 +360,9 @@ def enrich_descriptions(items: list[CatalogItem], session: Session, timeout: int
 
 def dedupe(items: Iterable[CatalogItem]) -> list[CatalogItem]:
     item_list = list(items)
-    unique: dict[tuple[str, str], CatalogItem] = {}
+    unique: dict[str, CatalogItem] = {}
     for item in item_list:
-        key = (item.name.lower(), item.url.rstrip("/").lower())
+        key = item.url.rstrip("/").lower()
         if key not in unique:
             unique[key] = item
     removed = len(item_list) - len(unique)

@@ -45,6 +45,71 @@ TYPE_ALIASES = {
     "situational": "situational judgement",
     "technical": "technical",
 }
+TECHNICAL_ROLE_TERMS = {
+    "backend",
+    "coding",
+    "developer",
+    "devops",
+    "engineer",
+    "engineering",
+    "frontend",
+    "java",
+    "javascript",
+    "programmer",
+    "programming",
+    "python",
+    "software",
+    "sql",
+    "technical",
+}
+TECHNICAL_ASSESSMENT_TERMS = {
+    "coding",
+    "coding simulations",
+    "developer",
+    "engineering",
+    "java",
+    "knowledge and skills",
+    "programming",
+    "python",
+    "software",
+    "technical",
+    "technical skills",
+}
+PREFERRED_TECHNICAL_PRODUCT_TERMS = {
+    "coding simulations",
+    "technical skills",
+}
+BUSINESS_COMMUNICATION_QUERY_TERMS = {
+    "business communication",
+    "business skills",
+    "communication",
+    "presentation",
+    "stakeholder",
+    "stakeholder communication",
+}
+LANGUAGE_QUERY_TERMS = {
+    "english",
+    "language",
+    "language evaluation",
+    "verbal",
+    "writing",
+}
+SECONDARY_TECHNICAL_PRODUCTS = {
+    "business skills",
+    "language evaluation",
+}
+IRRELEVANT_FOR_TECHNICAL_TERMS = {
+    "call center",
+    "commercial",
+    "contact center",
+    "customer service",
+    "customer success",
+    "hospitality",
+    "negotiation",
+    "retail",
+    "sales",
+    "service orientation",
+}
 
 
 @dataclass
@@ -66,6 +131,53 @@ def assessment_document(assessment: Assessment) -> str:
             " ".join(assessment.skills),
         ]
     )
+
+
+def is_technical_software_query(query: str) -> bool:
+    query_terms = set(re.findall(r"[a-z0-9+#.]+", query.lower()))
+    return bool(query_terms.intersection(TECHNICAL_ROLE_TERMS))
+
+
+def _contains_any(text: str, terms: set[str]) -> bool:
+    lowered = text.lower()
+    return any(term in lowered for term in terms)
+
+
+def _asks_for_business_communication(query: str) -> bool:
+    return _contains_any(query, BUSINESS_COMMUNICATION_QUERY_TERMS)
+
+
+def _asks_for_language(query: str) -> bool:
+    return _contains_any(query, LANGUAGE_QUERY_TERMS)
+
+
+def _domain_adjustment(query: str, assessment: Assessment) -> float:
+    if not is_technical_software_query(query):
+        return 0.0
+
+    document = assessment_document(assessment).lower()
+    score = 0.0
+
+    if _contains_any(document, PREFERRED_TECHNICAL_PRODUCT_TERMS):
+        score += 1.0
+    if _contains_any(document, TECHNICAL_ASSESSMENT_TERMS):
+        score += 0.45
+    if "technical" in {item.lower() for item in assessment.assessment_types}:
+        score += 0.35
+    if "business skills" in document and not _asks_for_business_communication(query):
+        score -= 0.8
+    if "language evaluation" in document and not _asks_for_language(query):
+        score -= 0.8
+    if _contains_any(document, SECONDARY_TECHNICAL_PRODUCTS):
+        score -= 0.15
+    if _contains_any(document, IRRELEVANT_FOR_TECHNICAL_TERMS):
+        score -= 0.55
+    if not _contains_any(document, TECHNICAL_ASSESSMENT_TERMS) and not any(
+        item.lower() in {"personality", "cognitive ability"} for item in assessment.assessment_types
+    ):
+        score -= 0.35
+
+    return score
 
 
 def is_vague(text: str) -> bool:
@@ -119,8 +231,10 @@ def merge_constraints(history_text: str, latest_text: str) -> SearchConstraints:
 def filter_catalog(catalog: list[Assessment], constraints: SearchConstraints) -> list[Assessment]:
     filtered: list[Assessment] = []
     for assessment in catalog:
-        catalog_types = {item.lower() for item in assessment.assessment_types}
-        if constraints.assessment_types and not catalog_types.intersection(constraints.assessment_types):
+        if constraints.assessment_types and not any(
+            _assessment_matches_type(assessment, requested_type)
+            for requested_type in constraints.assessment_types
+        ):
             continue
         if constraints.max_duration_minutes is not None and assessment.duration_minutes > constraints.max_duration_minutes:
             continue
@@ -130,6 +244,19 @@ def filter_catalog(catalog: list[Assessment], constraints: SearchConstraints) ->
             continue
         filtered.append(assessment)
     return filtered
+
+
+def _assessment_matches_type(assessment: Assessment, requested_type: str) -> bool:
+    requested = requested_type.lower()
+    document = assessment_document(assessment).lower()
+    catalog_types = {item.lower() for item in assessment.assessment_types}
+    if requested in catalog_types:
+        return True
+    if requested == "technical":
+        return "knowledge and skills" in catalog_types or _contains_any(document, PREFERRED_TECHNICAL_PRODUCT_TERMS)
+    if requested == "cognitive ability":
+        return "cognitive ability" in catalog_types or "verify" in document
+    return False
 
 
 def retrieve_assessments(
@@ -145,8 +272,21 @@ def retrieve_assessments(
     vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
     matrix = vectorizer.fit_transform(documents + [query])
     scores = cosine_similarity(matrix[-1], matrix[:-1]).flatten()
-    ranked = sorted(zip(scores, candidates), key=lambda item: item[0], reverse=True)
-    return [assessment for score, assessment in ranked[: constraints.max_results] if score > 0]
+    adjusted_scores = [
+        (float(score) + _domain_adjustment(query, assessment), assessment)
+        for score, assessment in zip(scores, candidates)
+    ]
+    ranked = sorted(adjusted_scores, key=lambda item: item[0], reverse=True)
+    if is_technical_software_query(query):
+        limit = min(constraints.max_results, 3)
+        return [assessment for score, assessment in ranked[:limit] if score > 0.4]
+    return [assessment for score, assessment in ranked[: constraints.max_results] if score > 0.05]
+
+
+def search(query: str, top_k: int = 10) -> list[Assessment]:
+    from app.catalog_loader import load_catalog
+
+    return retrieve_assessments(query, load_catalog(), SearchConstraints(max_results=top_k))
 
 
 def find_assessments_in_text(text: str, catalog: list[Assessment]) -> list[Assessment]:

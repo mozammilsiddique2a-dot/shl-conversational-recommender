@@ -12,6 +12,7 @@ AgentResponse = dict[str, Any]
 
 REFUSAL_REPLY = "I can only help with SHL assessment recommendations and catalog-based comparisons."
 CLARIFY_REPLY = "What role, skills, seniority, or assessment type should I use to recommend SHL assessments?"
+EMPTY_CONVERSATION_REPLY = "Please tell me what role or assessment you are looking for."
 
 PROMPT_INJECTION_PATTERNS = [
     re.compile(r"ignore\s+(all\s+)?previous\s+instructions", re.IGNORECASE),
@@ -143,11 +144,17 @@ def format_recommendations(items: list[Any]) -> list[RecommendationDict]:
 
 def generate_response(messages: list[dict]) -> dict:
     latest = latest_user_message(messages)
+    if not messages or not latest.strip():
+        return _response(EMPTY_CONVERSATION_REPLY, [], False)
+
     conversation_text = build_conversation_text(messages)
+    prior_messages = _messages_before_latest_user(messages)
+    prior_text = build_conversation_text(prior_messages)
+    prior_user_text = _user_conversation_text(prior_messages)
 
     refusal = _guardrail_refusal(conversation_text, latest)
     if refusal:
-        return _response(refusal, [], True)
+        return _response(refusal, [], False)
 
     if is_comparison_query(latest):
         catalog = load_catalog()
@@ -155,7 +162,7 @@ def generate_response(messages: list[dict]) -> dict:
         if len(compared_items) < 2:
             return _response("Please name at least two SHL catalog assessments to compare.", [], False)
         reply = _format_comparison(compared_items[:4])
-        return _response(reply, format_recommendations(compared_items[:4]), True)
+        return _response(reply, [], True)
 
     if is_vague_query(latest) and is_vague_query(conversation_text):
         return _response(CLARIFY_REPLY, [], False)
@@ -164,7 +171,16 @@ def generate_response(messages: list[dict]) -> dict:
     query = _build_search_query(conversation_text, latest, context)
     top_k = int(context.get("max_results") or 10)
     recommendations = _search_catalog(query, top_k=top_k)
-    recommendations = _apply_context_filters(recommendations, context)
+    if _is_additive_refinement(latest) and context.get("include_types") and prior_user_text:
+        prior_context = extract_query_context(prior_user_text)
+        prior_query = _build_search_query(prior_user_text, latest_user_message(prior_messages), prior_context)
+        prior_recommendations = _search_catalog(prior_query, top_k=top_k)
+        added_recommendations = _matching_catalog_items_for_include_types(context, top_k)
+        recommendations = _dedupe_items([*prior_recommendations, *added_recommendations])[:10]
+    else:
+        recommendations = _apply_context_filters(recommendations, context)
+        if not recommendations and context.get("include_types"):
+            recommendations = _matching_catalog_items_for_include_types(context, top_k)
 
     if not recommendations:
         return _response("I could not find a catalog match. Which role, skill, or assessment type should I prioritize?", [], False)
@@ -187,6 +203,30 @@ def _response(reply: str, recommendations: list[RecommendationDict], end_of_conv
         "recommendations": recommendations,
         "end_of_conversation": end_of_conversation,
     }
+
+
+def _messages_before_latest_user(messages: list[dict]) -> list[dict]:
+    for index in range(len(messages) - 1, -1, -1):
+        if _message_value(messages[index], "role") == "user":
+            return messages[:index]
+    return []
+
+
+def _user_conversation_text(messages: list[dict]) -> str:
+    parts = []
+    for message in messages:
+        if _message_value(message, "role") == "user":
+            content = _clean_text(_message_value(message, "content"))
+            if content:
+                parts.append(content)
+    return " ".join(parts)
+
+
+def _is_additive_refinement(text: str) -> bool:
+    lowered = text.lower()
+    if re.search(r"\b(replace|only|instead)\b", lowered):
+        return False
+    return bool(re.search(r"\b(also|add|include|as well|along with)\b", lowered))
 
 
 def _guardrail_refusal(conversation_text: str, latest: str) -> str | None:
@@ -234,22 +274,59 @@ def _apply_context_filters(items: list[Any], context: dict[str, Any]) -> list[An
     exclude_types = {term.lower() for term in context.get("exclude_types", set())}
     filtered = []
     for item in items:
-        test_type = _item_test_type(item).lower()
-        if include_types and not any(term in test_type for term in include_types):
+        if include_types and not any(_item_matches_requested_type(item, term) for term in include_types):
             continue
+        test_type = _item_test_type(item).lower()
         if exclude_types and any(term in test_type for term in exclude_types):
             continue
         filtered.append(item)
     return filtered[:10]
 
 
+def _matching_catalog_items_for_include_types(context: dict[str, Any], top_k: int) -> list[Any]:
+    include_types = {term.lower() for term in context.get("include_types", set())}
+    if not include_types:
+        return []
+    matches = []
+    for item in load_catalog():
+        if any(_item_matches_requested_type(item, term) for term in include_types):
+            matches.append(item)
+    return matches[: min(max(top_k, 1), 10)]
+
+
+def _dedupe_items(items: list[Any]) -> list[Any]:
+    deduped = []
+    seen: set[str] = set()
+    for item in items:
+        key = _item_value(item, "url") or _item_value(item, "name").lower()
+        if key and key not in seen:
+            seen.add(key)
+            deduped.append(item)
+    return deduped
+
+
+def _item_matches_requested_type(item: Any, requested_type: str) -> bool:
+    requested = requested_type.lower()
+    name = _item_value(item, "name").lower()
+    test_type = _item_test_type(item).lower()
+    if requested in test_type:
+        return True
+    if requested == "technical":
+        return "knowledge and skills" in test_type or "coding" in name or "technical" in name
+    if requested == "cognitive":
+        return "cognitive" in test_type or "verify" in name
+    return False
+
+
 def _find_catalog_items_in_text(text: str, catalog: list[Any]) -> list[Any]:
     lowered = text.lower()
+    query_tokens = set(re.findall(r"[a-z0-9+#.]+", lowered))
     found = []
     for item in catalog:
         name = _item_value(item, "name")
         name_words = [word for word in re.findall(r"[a-z0-9+#.]+", name.lower()) if len(word) > 2]
-        if name.lower() in lowered or sum(word in lowered for word in name_words) >= 2:
+        acronyms = {match.lower() for match in re.findall(r"\(([A-Za-z0-9+#.]{2,})\)", name)}
+        if name.lower() in lowered or query_tokens.intersection(acronyms) or sum(word in lowered for word in name_words) >= 2:
             found.append(item)
     return found
 
